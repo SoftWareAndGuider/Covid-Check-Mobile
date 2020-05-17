@@ -11,11 +11,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: '장곡중 발열체크 바코드 스케너'),
     );
   }
 }
@@ -35,14 +36,13 @@ class _MyHomePageState extends State<MyHomePage> {
     bool tracked = false;
     FlutterBarcodeScanner.getBarcodeStreamReceiver("#ff6666", "Cancel", false, ScanMode.BARCODE)
       .listen((data) {
-        if (tracked) return;
-
+        if (tracked || data == '-1') return;
         tracked = true;
-        http.put("http://117.20.192.157:11111/api", headers: { 'Content-type': 'application/json' }, body: jsonEncode({ 'process': 'check', 'id': data }))
+
+        http.put("https://checks.trinets.xyz/api", headers: { 'Content-type': 'application/json' }, body: jsonEncode({ 'process': 'check', 'id': data }))
           .then((res) {
             setState(() {
               var resData = jsonDecode(res.body);
-              print(resData);
               if (!resData['success']) {
                 list.insert(0, ListTile(title: Text("$data - no data")));
               } else {
@@ -59,10 +59,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
   }
 
-  ListView buildList () {
-    return ListView(children: [...list]);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,12 +66,12 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Container(
-        child: buildList()
+        child: ListView(children: [...list])
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
-        child: Icon(Icons.add)
+        child: Icon(Icons.camera)
       ),
     );
   }
